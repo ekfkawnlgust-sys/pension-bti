@@ -1,10 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 import { PageShell } from '../components/layout/PageShell';
 import { ResultRadar } from '../components/result/ResultRadar';
-import { Button, ButtonLink } from '../components/ui/Button';
+import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import type { QuizResultState, ScoreDimension } from '../types';
 import { resolveCharacter } from '../utils/characterEngine';
@@ -17,7 +17,7 @@ const heroImageModules = import.meta.glob('../assets/hero.png', {
   import: 'default',
 }) as Record<string, string>;
 const heroImageSrc = heroImageModules['../assets/hero.png'] ?? '/hero.png';
-const LOCAL_KAKAO_SHARE_URL = 'http://localhost:5173';
+const KAKAO_SHARE_URL = 'https://pension-bti-2026.vercel.app';
 let kakaoSdkPromise: Promise<KakaoSdk> | null = null;
 
 type KakaoShareDefaultPayload = {
@@ -158,20 +158,7 @@ export function Result() {
   const resultState = isQuizResultState(location.state) ? location.state : null;
 
   if (!resultState) {
-    return (
-      <PageShell className="flex min-h-[70vh] items-center justify-center">
-        <Card className="max-w-xl p-8 text-center">
-          <p className="text-sm font-bold text-brand-700">결과 없음</p>
-          <h1 className="mt-3 text-3xl font-black text-slate-950">진단을 먼저 완료해 주세요</h1>
-          <p className="mt-4 leading-7 text-slate-600">
-            연금BTI 결과는 12개 질문을 완료한 뒤 생성됩니다.
-          </p>
-          <div className="mt-8">
-            <ButtonLink to="/quiz">진단 시작하기</ButtonLink>
-          </div>
-        </Card>
-      </PageShell>
-    );
+    return <Navigate replace state={{ notice: '테스트를 먼저 진행해 주세요.' }} to="/" />;
   }
 
   const character = resolveCharacter(resultState.dimensionScores);
@@ -241,16 +228,16 @@ export function Result() {
           description: shareDescription,
           imageUrl: getAbsoluteAssetUrl(heroImageSrc),
           link: {
-            mobileWebUrl: LOCAL_KAKAO_SHARE_URL,
-            webUrl: LOCAL_KAKAO_SHARE_URL,
+            mobileWebUrl: KAKAO_SHARE_URL,
+            webUrl: KAKAO_SHARE_URL,
           },
         },
         buttons: [
           {
             title: '나도 테스트하기',
             link: {
-              mobileWebUrl: LOCAL_KAKAO_SHARE_URL,
-              webUrl: LOCAL_KAKAO_SHARE_URL,
+              mobileWebUrl: KAKAO_SHARE_URL,
+              webUrl: KAKAO_SHARE_URL,
             },
           },
         ],

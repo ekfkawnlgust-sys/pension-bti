@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 
 import { PageShell } from '../components/layout/PageShell';
 import { SectionHeader } from '../components/shared/SectionHeader';
@@ -8,8 +9,18 @@ import { Card } from '../components/ui/Card';
 import { Metric } from '../components/ui/Metric';
 
 export function Home() {
+  const location = useLocation();
+  const notice = typeof location.state === 'object' && location.state !== null && 'notice' in location.state
+    ? String(location.state.notice)
+    : null;
+
   return (
     <PageShell>
+      {notice ? (
+        <div className="mb-6 rounded-2xl border border-brand-100 bg-white px-5 py-4 text-sm font-bold text-brand-800 shadow-card">
+          {notice}
+        </div>
+      ) : null}
       <div className="grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr]">
         <motion.div
           animate={{ opacity: 1, y: 0 }}
