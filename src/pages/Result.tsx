@@ -81,6 +81,10 @@ function getWhyResultText(topDimensions: ScoreDimension[]) {
   return `이번 결과는 ${labels} 점수가 상대적으로 높게 나타난 답변 흐름을 바탕으로 결정됐어요.`;
 }
 
+function formatCharacterTypeName(characterName: string) {
+  return characterName.endsWith('형') ? characterName : `${characterName}형`;
+}
+
 function loadKakaoSdk(): Promise<KakaoSdk> {
   if (window.Kakao) {
     return Promise.resolve(window.Kakao);
@@ -173,10 +177,9 @@ export function Result() {
     resultState.pensionScore + resultState.questionHistory.length + resultState.dimensionScores.growth,
   );
   const recommendationServices = getRecommendationServices(character.id);
-  const recommendedFeatureNames = recommendationServices.map((service) => service.name);
-  const shareTitle = `나는 ${character.name} 유형!`;
-  const shareDescription = `연금관리성숙도 ${resultState.pensionScore}점\n\n추천\n\n${recommendedFeatureNames.join('\n\n')}`;
-  const shareMessage = `${shareTitle}\n\n${shareDescription}\n\n너도 연금BTI 테스트 해봐!`;
+  const shareTitle = `${character.emoji} 나는 ${formatCharacterTypeName(character.name)}!`;
+  const shareDescription = `연금 이해도 ${resultState.pensionScore}점\n\n👇 당신의 연금 유형도 확인해보세요!`;
+  const shareMessage = `${shareTitle}\n\n${shareDescription}`;
 
   async function copyShareMessage() {
     if (navigator.clipboard?.writeText) {
