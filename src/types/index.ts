@@ -49,6 +49,17 @@ export type CharacterRecommendationCard = {
   whyItMatches: string;
 };
 
+export type RecommendationService = {
+  id: string;
+  icon: string;
+  name: string;
+  description: string;
+  introduction: string;
+  recommendedFor: string;
+  matchingReasons: string[];
+  keyPoints: string[];
+};
+
 export type Recommendation = {
   id: string;
   characterId: Character['id'];
@@ -65,7 +76,7 @@ export type Badge = {
 
 export type ScoreBadge = Badge;
 
-export type ScoreGrade = 'Excellent' | 'Good' | 'Developing' | 'Starter';
+export type ScoreGrade = '완성형' | '안정형' | '성장형' | '입문형';
 
 export type DimensionScores = Record<ScoreDimension, number>;
 

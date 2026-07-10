@@ -3,18 +3,18 @@ import type { DimensionScores, ScoreBadge, ScoreGrade } from '../types';
 
 export function getScoreGrade(pensionScore: number): ScoreGrade {
   if (pensionScore >= 90) {
-    return 'Excellent';
+    return '완성형';
   }
 
   if (pensionScore >= 75) {
-    return 'Good';
+    return '안정형';
   }
 
   if (pensionScore >= 60) {
-    return 'Developing';
+    return '성장형';
   }
 
-  return 'Starter';
+  return '입문형';
 }
 
 export function resolveScoreBadges(scores: DimensionScores): ScoreBadge[] {

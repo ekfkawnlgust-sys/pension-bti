@@ -6,7 +6,8 @@ import { PageShell } from '../components/layout/PageShell';
 import { ResultRadar } from '../components/result/ResultRadar';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import type { QuizResultState, ScoreDimension } from '../types';
+import { getRecommendationServices } from '../data/recommendationServices';
+import type { QuizResultState, RecommendationService, ScoreDimension } from '../types';
 import { resolveCharacter } from '../utils/characterEngine';
 import { dimensionLabels, scoreDimensions } from '../utils/scoreEngine';
 import { getDailyPensionMessage, getScoreGrade, resolveScoreBadges } from '../utils/resultEngine';
@@ -155,6 +156,8 @@ export function Result() {
   const [isSavingImage, setIsSavingImage] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [hasCharacterImageError, setHasCharacterImageError] = useState(false);
+  const [selectedService, setSelectedService] = useState<RecommendationService | null>(null);
+  const [isConsultationNoticeOpen, setIsConsultationNoticeOpen] = useState(false);
   const resultState = isQuizResultState(location.state) ? location.state : null;
 
   if (!resultState) {
@@ -169,8 +172,8 @@ export function Result() {
     character.pensionMessages,
     resultState.pensionScore + resultState.questionHistory.length + resultState.dimensionScores.growth,
   );
-  const recommendedCards = character.recommendationCards.slice(0, 2);
-  const recommendedFeatureNames = recommendedCards.map((card) => card.featureName);
+  const recommendationServices = getRecommendationServices(character.id);
+  const recommendedFeatureNames = recommendationServices.map((service) => service.name);
   const shareTitle = `나는 ${character.name} 유형!`;
   const shareDescription = `연금관리성숙도 ${resultState.pensionScore}점\n\n추천\n\n${recommendedFeatureNames.join('\n\n')}`;
   const shareMessage = `${shareTitle}\n\n${shareDescription}\n\n너도 연금BTI 테스트 해봐!`;
@@ -299,7 +302,7 @@ export function Result() {
 
                 <div className="mx-auto mt-4 grid max-w-sm grid-cols-[1fr_auto] items-center gap-3 rounded-3xl bg-white/85 p-3 text-left shadow-card sm:mt-5">
                   <div>
-                    <p className="text-xs font-black text-slate-500">Pension Management Score</p>
+                    <p className="text-xs font-black text-slate-500">연금 관리 등급</p>
                     <p className="mt-1 text-sm font-bold text-brand-800">{scoreGrade}</p>
                   </div>
                   <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-700 text-2xl font-black text-white shadow-card sm:h-20 sm:w-20 sm:text-3xl">
@@ -307,15 +310,35 @@ export function Result() {
                   </div>
                 </div>
 
-                <div className="mx-auto mt-3 grid max-w-sm grid-cols-2 gap-2 sm:mt-4">
-                  {recommendedFeatureNames.map((featureName) => (
-                    <div
-                      className="rounded-2xl border border-white/80 bg-white/80 px-3 py-2.5 text-sm font-black text-slate-800 shadow-card sm:py-3"
-                      key={featureName}
-                    >
-                      {featureName}
-                    </div>
-                  ))}
+                <div className="mx-auto mt-4 max-w-sm rounded-3xl bg-white/70 p-3 text-left shadow-card sm:mt-5">
+                  <h2 className="text-base font-black text-slate-950">맞춤형 연금 처방</h2>
+                  <div className="mt-1 space-y-0.5 text-xs font-semibold leading-5 text-slate-500">
+                    <p>아래 상품 및 서비스를 활용해 보세요.</p>
+                    <p>클릭하면 자세한 내용을 확인할 수 있습니다.</p>
+                  </div>
+                  <div className="mt-3 grid gap-2">
+                    {recommendationServices.map((service) => (
+                      <button
+                        className="flex items-center gap-3 rounded-2xl border border-white/80 bg-white p-3 text-left shadow-card transition hover:-translate-y-0.5 hover:border-brand-100 hover:bg-brand-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-100"
+                        key={service.id}
+                        onClick={() => setSelectedService(service)}
+                        type="button"
+                      >
+                        <span className="flex h-10 min-w-10 items-center justify-center rounded-2xl bg-brand-700 text-xs font-black text-white">
+                          {service.icon}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-black text-slate-950">{service.name}</span>
+                          <span className="mt-0.5 block text-xs font-semibold leading-5 text-slate-500">
+                            {service.description}
+                          </span>
+                        </span>
+                        <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-black text-brand-800">
+                          자세히 보기
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -341,6 +364,24 @@ export function Result() {
                 {isDetailOpen ? '접기' : '자세히 보기'}
               </Button>
             </div>
+
+            <Card className="mt-4 border-brand-100 bg-white/90 p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-black text-slate-950">전문가와 연금 상담하기</h2>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                    내 연금 유형에 맞는 상품과 관리 방법을 자세히 알아보세요.
+                  </p>
+                </div>
+                <Button
+                  className="rounded-2xl sm:min-w-28"
+                  onClick={() => setIsConsultationNoticeOpen(true)}
+                  type="button"
+                >
+                  상담 신청
+                </Button>
+              </div>
+            </Card>
           </motion.div>
         </section>
 
@@ -460,16 +501,28 @@ export function Result() {
                 </Card>
 
                 <Card className="p-5 sm:p-7 lg:col-span-2">
-                  <h2 className="text-xl font-black text-slate-950">나에게 잘 맞는 한국투자증권 기능</h2>
+                  <h2 className="text-xl font-black text-slate-950">맞춤형 연금 처방</h2>
+                  <div className="mt-2 text-sm font-semibold leading-6 text-slate-500">
+                    <p>아래 상품 및 서비스를 활용해 보세요.</p>
+                    <p>클릭하면 자세한 내용을 확인할 수 있습니다.</p>
+                  </div>
                   <div className="mt-5 grid gap-4 md:grid-cols-2">
-                    {recommendedCards.map((card) => (
-                      <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5" key={card.featureName}>
-                        <p className="text-base font-black text-brand-700">{card.featureName}</p>
-                        <p className="mt-3 text-sm leading-6 text-slate-600">{card.explanation}</p>
-                        <div className="mt-4 rounded-2xl bg-white p-3 text-sm font-semibold leading-6 text-slate-700">
-                          {card.whyItMatches}
-                        </div>
-                      </div>
+                    {recommendationServices.map((service) => (
+                      <button
+                        className="rounded-3xl border border-slate-100 bg-slate-50 p-5 text-left transition hover:-translate-y-1 hover:bg-white hover:shadow-card focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-100"
+                        key={service.id}
+                        onClick={() => setSelectedService(service)}
+                        type="button"
+                      >
+                        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-700 text-sm font-black text-white">
+                          {service.icon}
+                        </span>
+                        <span className="mt-4 block text-base font-black text-brand-700">{service.name}</span>
+                        <span className="mt-2 block text-sm leading-6 text-slate-600">{service.description}</span>
+                        <span className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-brand-800 shadow-card">
+                          자세히 보기
+                        </span>
+                      </button>
                     ))}
                   </div>
                 </Card>
@@ -482,6 +535,112 @@ export function Result() {
                 </Card>
               </div>
             </motion.section>
+          ) : null}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {selectedService ? (
+            <motion.div
+              animate={{ opacity: 1 }}
+              className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45 px-4 pb-4 pt-16 backdrop-blur-sm sm:items-center sm:p-6"
+              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              role="dialog"
+              aria-modal="true"
+            >
+              <motion.div
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                className="w-full max-w-lg rounded-[2rem] bg-white p-6 shadow-soft"
+                exit={{ opacity: 0, y: 18, scale: 0.98 }}
+                initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                transition={{ duration: 0.24, ease: 'easeOut' }}
+              >
+                <div className="flex items-start gap-4">
+                  <span className="flex h-14 min-w-14 items-center justify-center rounded-2xl bg-brand-700 text-sm font-black text-white shadow-card">
+                    {selectedService.icon}
+                  </span>
+                  <div>
+                    <p className="text-sm font-black text-brand-700">맞춤형 연금 처방</p>
+                    <h2 className="mt-1 text-2xl font-black text-slate-950">{selectedService.name}</h2>
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-5">
+                  <section>
+                    <h3 className="text-sm font-black text-slate-950">서비스 소개</h3>
+                    <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                      {selectedService.introduction}
+                    </p>
+                  </section>
+
+                  <section>
+                    <h3 className="text-sm font-black text-slate-950">이런 분께 잘 맞아요</h3>
+                    <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                      {selectedService.recommendedFor}
+                    </p>
+                    <div className="mt-3 grid gap-2">
+                      {selectedService.matchingReasons.map((reason) => (
+                        <p className="rounded-2xl bg-slate-50 p-3 text-sm font-bold leading-6 text-slate-700" key={reason}>
+                          {reason}
+                        </p>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section>
+                    <h3 className="text-sm font-black text-slate-950">핵심 포인트</h3>
+                    <div className="mt-3 grid gap-2">
+                      {selectedService.keyPoints.map((point, index) => (
+                        <div className="flex gap-3 rounded-2xl bg-brand-50 p-3" key={point}>
+                          <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-700 text-xs font-black text-white">
+                            {index + 1}
+                          </span>
+                          <p className="text-sm font-bold leading-6 text-brand-950">{point}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+
+                <Button className="mt-6 w-full rounded-2xl" onClick={() => setSelectedService(null)} type="button">
+                  닫기
+                </Button>
+              </motion.div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isConsultationNoticeOpen ? (
+            <motion.div
+              animate={{ opacity: 1 }}
+              aria-modal="true"
+              className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45 px-4 pb-4 pt-16 backdrop-blur-sm sm:items-center sm:p-6"
+              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              role="dialog"
+            >
+              <motion.div
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                className="w-full max-w-md rounded-[2rem] bg-white p-6 shadow-soft"
+                exit={{ opacity: 0, y: 18, scale: 0.98 }}
+                initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                transition={{ duration: 0.24, ease: 'easeOut' }}
+              >
+                <p className="text-sm font-black text-brand-700">상담 신청</p>
+                <h2 className="mt-2 text-2xl font-black text-slate-950">상담 신청 기능 준비 중</h2>
+                <p className="mt-4 text-sm font-semibold leading-6 text-slate-600">
+                  현재 개발 중인 기능입니다. 추후 실제 상담 신청 서비스로 연결될 예정입니다.
+                </p>
+                <Button
+                  className="mt-6 w-full rounded-2xl"
+                  onClick={() => setIsConsultationNoticeOpen(false)}
+                  type="button"
+                >
+                  확인
+                </Button>
+              </motion.div>
+            </motion.div>
           ) : null}
         </AnimatePresence>
       </div>
